@@ -1,16 +1,26 @@
+/* employees.h - Employee Management module */
+
 #ifndef EMPLOYEES_H
 #define EMPLOYEES_H
 
-typedef struct {
-    int id;
-    char name[50];
-    char department[50];
-    float basicSalary;
-    float housingAllowance;
-    float transportAllowance;
-} Employee;
+#define MAX_EMPLOYEES 100
 
-// Function prototypes
-void addEmployee(Employee employees[], int *count);
+void employeeMenu(void);
+void addEmployee(void);
+void displayEmployees(void);
+void searchEmployee(void);
+void showSalaryDetails(void);
+void displayOneEmployee(int index);
+
+int findEmployeeById(char id[]);
+double calculateGrossSalary(double basic, double housing, double transport);
+double calculateTax(double gross);
+double calculatePension(double basic);
+double calculateNetSalary(double gross, double tax, double pension);
+
+/* used by the reports module */
+int getEmployeeCount(void);
+double getEmployeeGross(int index);
+void getEmployeeName(int index, char name[]);
 
 #endif
