@@ -1,10 +1,6 @@
 #include <stdio.h>
-#include "reports.h"
-#include "employees.h"
 #include "budgets.h"
-#include "suppliers.h"
-#include "assets.h"
-#include "input.h"
+
 
 void reportsMenu(void)
 {
