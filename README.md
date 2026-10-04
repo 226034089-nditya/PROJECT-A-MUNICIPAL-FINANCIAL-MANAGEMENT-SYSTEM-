@@ -31,9 +31,37 @@ This is a C based program to assist with the basic Municipal Information, our gr
 - Calculates remaining budget
 - Determine whether expenditure is within budget
 - Identify departments that have exceeded their allocated budget
+
 ### SUPPLIER MANAGEMENT
 - Allows users to maintain basic supplier information, e.g Supplier ID, Supplier Name, Email and Phone number.
 - Add suppliers
 - Display suppliers
 - Search for suppliers
 - Compare/ search supplier information
+
+### ASSET MANAGEMENT
+- Provides basic assets, such as:
+  * Vehicles, Computers, Building, Equipment and Office furniture.
+- Stores information such as:
+  * Asset ID
+  * Asset name
+  * Asset type
+  * purchase value
+  * Department
+  * Condition
+
+### REPORTS
+- Provides basic reports that show:
+  * Total allocated budget
+  * Remaining budget
+  * Departments exceeding budget
+
+## Technologies Used
+- C Language
+- GCC
+- Git
+- GitHub
+- Visual Studio Code
+
+
+    
