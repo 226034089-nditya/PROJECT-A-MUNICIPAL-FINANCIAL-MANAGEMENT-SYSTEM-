@@ -1,15 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "employees.h"
-#include "budget.h"
+#include "budgets.h"
 #include "suppliers.h"
 #include "assets.h"
 #include "reports.h"
+#include "utilities.h"
 
 
-//1-Global arrays 
+//Global arrays 
 Employee employees[50];
-Budget budgets[20];
+Budget budgets[10];
 Supplier suppliers[50];
 Asset assets[50];
 int employeeCount = 0;
@@ -18,7 +19,7 @@ int supplierCount = 0;
 int assetCount = 0;
 
 
-//2-Select choice from menu
+//Switch statement for menu
 void displayMainMenu() {
  printf("\n========================================\n");
  printf("MUNICIPAL FINANCIAL MANAGEMENT SYSTEM\n");
@@ -31,7 +32,8 @@ void displayMainMenu() {
  printf("6. Exit\n");
  printf("Enter your choice: ");
 }
-//3-Employee Management
+
+
 void employeeMenu() {
  int choice;
  
@@ -45,7 +47,7 @@ void employeeMenu() {
  scanf("%d", &choice);
  getchar();
  
- 
+ //Conditional statements
  switch (choice) {
  case 1:
  addEmployee(employees, &employeeCount);
@@ -63,10 +65,9 @@ void employeeMenu() {
  }
  }
 }
-
-//4-Budget management
 void budgetMenu() {
  int choice;
+ 
  while (1) {
  printf("\n--- BUDGET MANAGEMENT ---\n");
  printf("1. Add Budget\n");
@@ -94,10 +95,9 @@ void budgetMenu() {
  }
  }
 }
-
-//5- Supplier management
 void supplierMenu() {
  int choice;
+ 
  while (1) {
  printf("\n--- SUPPLIER MANAGEMENT ---\n");
  printf("1. Add Supplier\n");
@@ -125,9 +125,9 @@ void supplierMenu() {
  }
  }
 }
-//5-Asset management
 void assetMenu() {
  int choice;
+ 
  while (1) {
  printf("\n--- ASSET MANAGEMENT ---\n");
  printf("1. Add Asset\n");
@@ -155,8 +155,6 @@ void assetMenu() {
  }
  }
 }
-
-//6- reports
 void reportsMenu() {
  int choice;
  
@@ -191,15 +189,16 @@ void reportsMenu() {
  }
  }
 }
-
+// Main function - coordinator (Week 7-8: Program organization)
 int main() {
  int mainChoice;
  
  while (1) {
  displayMainMenu();
  scanf("%d", &mainChoice);
- getchar();
+ getchar(); // Clear input buffer
  
+ //Switch for main menu
  switch (mainChoice) {
  case 1:
  employeeMenu();
@@ -217,7 +216,7 @@ int main() {
  reportsMenu();
  break;
  case 6:
- printf("\nThank you for using our MFMS. See you next time!\n");
+ printf("\nThank you for using MFMS. Goodbye!\n");
  exit(0);
  default:
  printf("Invalid choice. Please try again.\n");
