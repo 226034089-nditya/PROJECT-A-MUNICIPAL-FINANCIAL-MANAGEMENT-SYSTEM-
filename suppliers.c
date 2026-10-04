@@ -1,185 +1,344 @@
-/* Supplier Management module implementation */
+/* suppliers.c - Supplier Management module */
+
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "suppliers.h"
+#include "input.h"
 
-/* Module-private data                                      */
-/* Parallel arrays: one slot per supplier across all fields.        */
-static int  supplierIDs[MAX_SUPPLIERS];
-static char supplierNames [MAX_SUPPLIERS][NAME_LEN];
-static char supplierEmails[MAX_SUPPLIERS][EMAIL_LEN];
-static char supplierPhones[MAX_SUPPLIERS][PHONE_LEN];
-static char supplierTowns [MAX_SUPPLIERS][TOWN_LEN];
+char supId[MAX_SUPPLIERS][10];
+char supName[MAX_SUPPLIERS][TEXT_SIZE];
+char supEmail[MAX_SUPPLIERS][TEXT_SIZE];
+char supPhone[MAX_SUPPLIERS][20];
+char supTown[MAX_SUPPLIERS][TEXT_SIZE];
+char supService[MAX_SUPPLIERS][TEXT_SIZE];
+int supplierCount = 0;
 
-static int supplierCount = 0;   /* to show how many suppliers stored so far */
-
-/* ---- strips the newline that fgets() keeps ------- */
-static void stripNewline(char *s)
+void supplierMenu(void)
 {
-    s[strcspn(s, "\n")] = '\0';   
+    int choice;
+
+    do
+    {
+        printf("\n========== SUPPLIER MANAGEMENT ==========\n");
+        printf("1. Add supplier\n");
+        printf("2. Display all suppliers\n");
+        printf("3. Search for a supplier\n");
+        printf("4. Compare two suppliers\n");
+        printf("5. Back to main menu\n");
+        choice = readInt("Enter your choice: ", 1, 5);
+
+        switch (choice)
+        {
+            case 1:
+                addSupplier();
+                break;
+            case 2:
+                displaySuppliers();
+                break;
+            case 3:
+                searchSupplier();
+                break;
+            case 4:
+                compareSuppliers();
+                break;
+            case 5:
+                printf("Returning to main menu...\n");
+                break;
+        }
+    } while (choice != 5);
 }
 
-/* ---- reads a non-empty line into buffer ---------- */
-static void readNonEmpty(const char *prompt, char *buffer, int size)
-{
-    do {
-        printf("%s", prompt);
-        if (fgets(buffer, size, stdin) == NULL) {
-            buffer[0] = '\0';     /* treats the End Of File as empty */
-        }
-        stripNewline(buffer);
-        if (strlen(buffer) == 0) {
-            printf("  Input cannot be empty. Please try again.\n");
-        }
-    } while (strlen(buffer) == 0);
-}
-
-/* addSupplier - capture one supplier record                        */
 void addSupplier(void)
 {
-    int  id;
-    char tempName[NAME_LEN];
+    char id[10];
 
-    printf("\n--- ADD SUPPLIER ---\n");
-
-    /* Prevents overflow */
-    if (supplierCount >= MAX_SUPPLIERS) {
-        printf("Supplier list is full (%d max).\n", MAX_SUPPLIERS);
+    if (supplierCount >= MAX_SUPPLIERS)
+    {
+        printf("Sorry, the supplier list is full.\n");
         return;
     }
 
-    /* 1. Supplier ID - must be a positive number and unique */
-    do {
-        printf("Enter Supplier ID (positive integer): ");
-        if (scanf("%d", &id) != 1) {           /* the user typed a non-numeric input */
-            printf("  Invalid number. Try again.\n");
-            while (getchar() != '\n');         /* flush the bad input */
-            id = -1;                           /* force loop to repeat */
-        } else {
-            /* remove the enter key left behind*/
-            getchar();                         
-            if (id <= 0) {
-                printf("  ID must be positive.\n");
-            } else if (searchSupplierByID(id) >= 0) {
-                printf("  ID %d already exists.\n", id);
-                id = -1;
-            }
-        }
-    } while (id <= 0);
+    printf("\n--- Add New Supplier ---\n");
 
-    supplierIDs[supplierCount] = id;
+    readString("Supplier ID (e.g. S001): ", id, 10);
+    while (findSupplierById(id) != -1)
+    {
+        printf("  Error: supplier ID %s already exists.\n", id);
+        readString("Supplier ID (e.g. S001): ", id, 10);
+    }
+    strcpy(supId[supplierCount], id);
 
-    /* 2. Get supplier name - uses fgets() which allows space        */
-    /*    scanf("%s") stops at a space; fgets() doesn't */
-    readNonEmpty("Enter Supplier Name      : ",
-                 supplierNames[supplierCount], NAME_LEN);
+    readString("Supplier name: ", supName[supplierCount], TEXT_SIZE);
 
-    /* 3. Get email - email must contain '@'        */
-    do {
-        readNonEmpty("Enter Supplier Email     : ",
-                     supplierEmails[supplierCount], EMAIL_LEN);
-        if (strchr(supplierEmails[supplierCount], '@') == NULL) {
-            printf("  Email must contain '@'. Try again.\n");
-        }
-    } while (strchr(supplierEmails[supplierCount], '@') == NULL);
+    readString("Email: ", supEmail[supplierCount], TEXT_SIZE);
+    while (!isValidEmail(supEmail[supplierCount]))
+    {
+        printf("  Error: email must look like name@company.com\n");
+        readString("Email: ", supEmail[supplierCount], TEXT_SIZE);
+    }
 
-    /* 4. Phone is kept as a string because it may start with 0 or +  */
-    readNonEmpty("Enter Supplier Phone     : ",
-                 supplierPhones[supplierCount], PHONE_LEN);
+    readString("Telephone number: ", supPhone[supplierCount], 20);
+    while (!isValidPhone(supPhone[supplierCount]))
+    {
+        printf("  Error: telephone must have 7 to 15 digits (a + at the start is allowed).\n");
+        readString("Telephone number: ", supPhone[supplierCount], 20);
+    }
 
-    /* 5. Get town - fgets() to accept "Walvis Bay"                */
-    readNonEmpty("Enter Supplier Town      : ",
-                 supplierTowns[supplierCount], TOWN_LEN);
+    readString("Town/Location: ", supTown[supplierCount], TEXT_SIZE);
+    readString("Goods/Service supplied: ", supService[supplierCount], TEXT_SIZE);
 
     supplierCount++;
-    printf("Supplier added successfully. (%d stored)\n", supplierCount);
-
-    /* strcpy() to copy the name into a backup)       */
-    strcpy(tempName, supplierNames[supplierCount - 1]);
-    printf("(Backup copy of name stored in tempName: \"%s\")\n", tempName);
+    printf("Supplier added successfully. Total suppliers: %d\n", supplierCount);
 }
 
-/* ================================================================ */
-/* displaySuppliers - print every stored supplier                   */
-/* ================================================================ */
 void displaySuppliers(void)
 {
     int i;
 
-    printf("\n--- SUPPLIER LIST (%d) ---\n", supplierCount);
-
-    if (supplierCount == 0) {
-        printf("No suppliers recorded yet.\n");
+    if (supplierCount == 0)
+    {
+        printf("No suppliers have been added yet.\n");
         return;
     }
 
-    printf("%-6s %-25s %-25s %-15s %-15s\n",
-           "ID", "Name", "Email", "Phone", "Town");
-    printf("-------------------------------------------------------------------------------\n");
-/* print a row per supplier */
-    for (i = 0; i < supplierCount; i++) {
-        printf("%-6d %-25s %-25s %-15s %-15s\n",
-               supplierIDs[i],
-               supplierNames[i],
-               supplierEmails[i],
-               supplierPhones[i],
-               supplierTowns[i]);
+    printf("\n%-6s %-22s %-24s %-14s %-12s %s\n", "ID", "Name", "Email", "Telephone", "Town", "Service");
+    printLine();
+    for (i = 0; i < supplierCount; i++)
+    {
+        printf("%-6s %-22s %-24s %-14s %-12s %s\n", supId[i], supName[i], supEmail[i],
+               supPhone[i], supTown[i], supService[i]);
     }
+    printLine();
+    printf("Total suppliers: %d\n", supplierCount);
 }
 
-/* ================================================================ */
-/* searchSupplier - find name using strcmp()                        */
-/* ================================================================ */
+void displayOneSupplier(int index)
+{
+    printf("\nSupplier ID : %s\n", supId[index]);
+    printf("Name        : %s\n", supName[index]);
+    printf("Email       : %s\n", supEmail[index]);
+    printf("Telephone   : %s\n", supPhone[index]);
+    printf("Town        : %s\n", supTown[index]);
+    printf("Service     : %s\n", supService[index]);
+}
+
 void searchSupplier(void)
 {
-    int  i, found = 0;
-    char target[NAME_LEN];
+    int choice;
+    int i;
+    int index;
+    int found = 0;
+    int match;
+    char searchText[TEXT_SIZE];
 
-    if (supplierCount == 0) {
-        printf("No suppliers to search.\n");
+    if (supplierCount == 0)
+    {
+        printf("No suppliers have been added yet.\n");
         return;
     }
 
-    readNonEmpty("\nEnter supplier name to search: ", target, NAME_LEN);
+    printf("\nSearch by:\n");
+    printf("1. Supplier ID\n");
+    printf("2. Name\n");
+    printf("3. Town/Location\n");
+    printf("4. Goods/Service\n");
+    choice = readInt("Enter your choice: ", 1, 4);
 
-    for (i = 0; i < supplierCount; i++) {
-        /* strcmp() is used to compare strings. Returns 0 when strings are the same */
-        if (strcmp(supplierNames[i], target) == 0) {
-            printf("\nSupplier found at position %d:\n", i);
-            printf("  ID    : %d\n",  supplierIDs[i]);
-            printf("  Name  : %s\n",  supplierNames[i]);
-            printf("  Email : %s\n",  supplierEmails[i]);
-            printf("  Phone : %s\n",  supplierPhones[i]);
-            printf("  Town  : %s\n",  supplierTowns[i]);
-            found = 1;
-            break;
+    if (choice == 1)
+    {
+        readString("Enter supplier ID: ", searchText, TEXT_SIZE);
+        index = findSupplierById(searchText);
+        if (index == -1)
+        {
+            printf("No supplier found with ID %s.\n", searchText);
+        }
+        else
+        {
+            displayOneSupplier(index);
+        }
+        return;
+    }
+
+    readString("Enter text to search for: ", searchText, TEXT_SIZE);
+
+    for (i = 0; i < supplierCount; i++)
+    {
+        match = 0;
+        switch (choice)
+        {
+            case 2:
+                match = containsText(supName[i], searchText);
+                break;
+            case 3:
+                match = containsText(supTown[i], searchText);
+                break;
+            case 4:
+                match = containsText(supService[i], searchText);
+                break;
+        }
+
+        if (match)
+        {
+            displayOneSupplier(i);
+            found++;
         }
     }
 
-    if (!found) {
-        printf("Supplier \"%s\" not found.\n", target);
+    if (found == 0)
+    {
+        printf("No suppliers matched \"%s\".\n", searchText);
+    }
+    else
+    {
+        printf("\n%d supplier(s) found.\n", found);
     }
 }
 
-/* ================================================================ */
-/* getSupplierCount            */
-/* ================================================================ */
-int getSupplierCount(void)
+/* shows two suppliers next to each other and says what they have in common */
+void compareSuppliers(void)
 {
-    return supplierCount;
+    char id1[10];
+    char id2[10];
+    int first;
+    int second;
+
+    if (supplierCount < 2)
+    {
+        printf("You need at least 2 suppliers to compare.\n");
+        return;
+    }
+
+    readString("Enter first supplier ID: ", id1, 10);
+    first = findSupplierById(id1);
+    if (first == -1)
+    {
+        printf("No supplier found with ID %s.\n", id1);
+        return;
+    }
+
+    readString("Enter second supplier ID: ", id2, 10);
+    second = findSupplierById(id2);
+    if (second == -1)
+    {
+        printf("No supplier found with ID %s.\n", id2);
+        return;
+    }
+
+    if (first == second)
+    {
+        printf("You entered the same supplier twice.\n");
+        return;
+    }
+
+    printf("\n%-12s %-25s %-25s\n", "", supId[first], supId[second]);
+    printLine();
+    printf("%-12s %-25s %-25s\n", "Name", supName[first], supName[second]);
+    printf("%-12s %-25s %-25s\n", "Email", supEmail[first], supEmail[second]);
+    printf("%-12s %-25s %-25s\n", "Telephone", supPhone[first], supPhone[second]);
+    printf("%-12s %-25s %-25s\n", "Town", supTown[first], supTown[second]);
+    printf("%-12s %-25s %-25s\n", "Service", supService[first], supService[second]);
+    printLine();
+
+    if (sameText(supTown[first], supTown[second]))
+    {
+        printf("Both suppliers are in %s.\n", supTown[first]);
+    }
+    else
+    {
+        printf("The suppliers are in different towns.\n");
+    }
+
+    if (sameText(supService[first], supService[second]))
+    {
+        printf("Both suppliers supply the same goods/service: %s.\n", supService[first]);
+    }
+    else
+    {
+        printf("The suppliers supply different goods/services.\n");
+    }
 }
 
-/* ================================================================ */
-/* searchSupplierByID - private helper used inside this file only.              */
-/* Returns index or -1 if not found                                           */
-/* ================================================================ */
-int searchSupplierByID(int id)
+int findSupplierById(char id[])
 {
     int i;
-    for (i = 0; i < supplierCount; i++) {
-        if (supplierIDs[i] == id) {
+
+    for (i = 0; i < supplierCount; i++)
+    {
+        if (sameText(supId[i], id))
+        {
             return i;
         }
     }
     return -1;
+}
+
+/* simple email check: one @, something before it, and a dot after it */
+int isValidEmail(char email[])
+{
+    int i;
+    int atPosition = -1;
+    int atCount = 0;
+    int dotAfterAt = 0;
+    int length = strlen(email);
+
+    for (i = 0; i < length; i++)
+    {
+        if (email[i] == ' ')
+        {
+            return 0;
+        }
+        if (email[i] == '@')
+        {
+            atCount++;
+            atPosition = i;
+        }
+    }
+
+    if (atCount != 1 || atPosition == 0)
+    {
+        return 0;
+    }
+
+    /* there must be a dot after the @ but not right after it and not at the end */
+    for (i = atPosition + 2; i < length - 1; i++)
+    {
+        if (email[i] == '.')
+        {
+            dotAfterAt = 1;
+        }
+    }
+
+    return dotAfterAt;
+}
+
+/* phone may only have digits (and a + at the start), 7 to 15 digits */
+int isValidPhone(char phone[])
+{
+    int i;
+    int digits = 0;
+    int length = strlen(phone);
+
+    for (i = 0; i < length; i++)
+    {
+        if (isdigit((unsigned char)phone[i]))
+        {
+            digits++;
+        }
+        else if (!(i == 0 && phone[i] == '+'))
+        {
+            return 0;
+        }
+    }
+
+    if (digits >= 7 && digits <= 15)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+int getSupplierCount(void)
+{
+    return supplierCount;
 }
