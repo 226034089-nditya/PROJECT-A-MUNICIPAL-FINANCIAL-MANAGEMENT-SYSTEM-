@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "budgets.h"
-#include "input.h"
+
 
 #define MAX_DEPARTMENTS 10
 
