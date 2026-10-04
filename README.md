@@ -13,7 +13,7 @@ Municipal Financial Management System - PAP521S Project A
 | Edwin Kupembona | #225068567 | 4. Asset Management |
 | Paulus Andjamba | #226008177 | 5. Reports |
 | Ignaldio Junior | #226040437 | 6. Functions, Integration and Validation |
-| Philomena Nditya | #226034089 | 7. Testing, Documentation and Git Repository |
+| Philomena Nditya | #226034089 | 7. Testing, Documentation and Git Coordination |
     
 
 ## PROJECT DESCRIPTION
@@ -100,7 +100,7 @@ After successfully compiling the program, run the system using:
 | Edwin Kupembona | #225068567 | 4. Asset Management |
 | Paulus Andjamba | #226008177 | 5. Reports |
 | Ignaldio Junior | #226040437 | 6. Functions, Integration and Validation |
-| Philomena Nditya | #226034089 | 7. Testing, Documentation and Git Repository |
+| Philomena Nditya | #226034089 | 7. Testing, Documentation and Git Coordination |
     
 
 
